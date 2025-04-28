@@ -12,7 +12,7 @@ def index_range(page: int, page_size: int) -> Tuple[int, int]:
 
 class Server:
     """Server class to paginate a database of popular baby names."""
-    
+
     DATA_FILE = "Popular_Baby_Names.csv"
 
     def __init__(self):
@@ -30,26 +30,26 @@ class Server:
 
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
         """Returns the correct page of the dataset."""
-        
+
         # Validate arguments
-        assert isinstance(page, int) and page > 0, "Page must be a positive integer."
-        assert isinstance(page_size, int) and page_size > 0, "Page size must be a positive integer."
-        
+        assert isinstance(page, int) and page > 0
+        assert isinstance(page_size, int) and page_size > 0
+
         # Get the dataset
         dataset = self.dataset()
 
         # Use index_range to find the correct indices
         start, end = index_range(page, page_size)
 
-        # Return the appropriate page, or an empty list if indices are out of range
+        # Return the appropriate page, or an empty list
         if start >= len(dataset):
             return []
-        
+
         return dataset[start:end]
 
     def get_hyper(self, page: int = 1, page_size: int = 10) -> Dict:
         """Returns a dictionary containing pagination info."""
-        
+
         # Get the data for the current page
         data = self.get_page(page, page_size)
 
