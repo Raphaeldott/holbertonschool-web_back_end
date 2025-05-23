@@ -1,26 +1,60 @@
 const express = require('express');
-const countStudents = require('./3-read_file_async');
+const fs = require('fs');
 
 const app = express();
+const PORT = 1245;
 
-app.get('/', (req, res) => {
-  res.status(200).send('Hello Holberton School!');
-});
+function countStudents(path) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(path, 'utf-8', (err, data) => {
+      if (err) {
+        reject(new Error('Cannot load the database'));
+        return;
+      }
 
-app.get('/students', (req, res) => {
-  const databasePath = process.argv[2];
+      const lines = data.trim().split('\n');
+      const students = lines
+        .filter((line, index) => line && index !== 0) // skip header, ignore empty lines
+        .map((line) => line.split(','));
 
-  countStudents(databasePath)
-    .then(() => {
-      res.status(200).send('This is the list of our students');
-    })
-    .catch((error) => {
-      res.status(500).send(error.message);
+      const groups = {};
+      for (const student of students) {
+        const field = student[3];
+        if (!groups[field]) groups[field] = [];
+        groups[field].push(student[0]);
+      }
+
+      let output = `Number of students: ${students.length}`;
+      for (const [field, names] of Object.entries(groups)) {
+        output += `\nNumber of students in ${field}: ${names.length}. List: ${names.join(', ')}`;
+      }
+
+      resolve(output);
     });
+  });
+}
+
+// Route: /
+app.get('/', (req, res) => {
+  res.send('Hello Holberton School!');
 });
 
-app.listen(1245, () => {
-  console.log('Server is running on port 1245');
+// Route: /students
+app.get('/students', async (req, res) => {
+  const database = process.argv[2];
+  if (!database) {
+    res.status(500).send('Cannot load the database');
+    return;
+  }
+
+  try {
+    const studentSummary = await countStudents(database);
+    res.send(`This is the list of our students\n${studentSummary}`);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
 });
+
+app.listen(PORT);
 
 module.exports = app;
